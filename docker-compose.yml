@@ -1,7 +1,7 @@
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:25.3.10
-    restart: on-failure
+    restart: unless-stopped
     environment:
       CLICKHOUSE_USER: uptrace
       CLICKHOUSE_PASSWORD: uptrace
@@ -16,7 +16,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    restart: on-failure
+    restart: unless-stopped
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: uptrace
@@ -32,7 +32,7 @@ services:
 
   redis:
     image: redis:6.2.2-alpine
-    restart: on-failure
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
@@ -41,7 +41,7 @@ services:
 
   uptrace:
     image: "uptrace/uptrace:2.0.2"
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - ./uptrace.yml:/etc/uptrace/config.yml
       - ./certs/server.crt:/etc/uptrace/server.crt
@@ -64,7 +64,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    restart: on-failure
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
