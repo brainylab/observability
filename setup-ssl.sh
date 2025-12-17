@@ -78,7 +78,7 @@ fi
 
 # Diretórios
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SSL_DIR="$SCRIPT_DIR/nginx/ssl"
+SSL_DIR="$SCRIPT_DIR/certs"
 
 print_info "Diretório do projeto: $SCRIPT_DIR"
 echo ""
