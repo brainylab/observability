@@ -1,3 +1,6 @@
 # ignore files
 .env
 uptrace.yml
+
+#ignore folders
+./nginx/ssl
