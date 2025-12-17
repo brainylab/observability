@@ -117,8 +117,8 @@ else
     print_info "Certbot já está instalado: $(certbot --version | head -1)"
 fi
 
-# Verificar se docker-compose está instalado
-if ! command -v docker-compose &> /dev/null; then
+# Verificar se docker compose está instalado
+if ! command -v docker compose &> /dev/null; then
     print_error "Docker Compose não encontrado. Instale primeiro!"
     exit 1
 fi
@@ -161,8 +161,8 @@ print_step "ETAPA 3/8: Parando Nginx para liberar portas 80 e 443..."
 cd "$SCRIPT_DIR"
 
 # Verificar se nginx está rodando
-if docker-compose ps nginx 2>/dev/null | grep -q "Up"; then
-    docker-compose stop nginx > /dev/null 2>&1
+if docker compose ps nginx 2>/dev/null | grep -q "Up"; then
+    docker compose stop nginx > /dev/null 2>&1
     print_info "Nginx parado com sucesso"
     sleep 2
 fi
@@ -261,18 +261,18 @@ echo ""
 print_step "ETAPA 7/8: Reiniciando Nginx..."
 
 cd "$SCRIPT_DIR"
-docker-compose up -d nginx > /dev/null 2>&1
+docker compose up -d nginx > /dev/null 2>&1
 
 sleep 5
 
 # Verificar se nginx está rodando
-if docker-compose ps nginx | grep -q "Up"; then
+if docker compose ps nginx | grep -q "Up"; then
     print_info "Nginx iniciado com sucesso!"
 else
     print_error "Falha ao iniciar Nginx!"
     echo ""
     print_info "Logs do Nginx:"
-    docker-compose logs nginx
+    docker compose logs nginx
     exit 1
 fi
 
@@ -295,7 +295,7 @@ echo "[\$(date)] Iniciando renovação de certificados..."
 
 # Parar nginx
 cd "\$SCRIPT_DIR"
-docker-compose stop nginx
+docker compose stop nginx
 
 # Renovar certificados
 certbot renew --quiet
@@ -313,7 +313,7 @@ chmod 644 "\$SSL_DIR/server.crt" "\$SSL_DIR/ingest.crt"
 chmod 600 "\$SSL_DIR/server.key" "\$SSL_DIR/ingest.key"
 
 # Reiniciar nginx
-docker-compose up -d nginx
+docker compose up -d nginx
 
 echo "[\$(date)] Renovação concluída com sucesso!"
 RENEW_SCRIPT
@@ -369,7 +369,7 @@ echo "       ingest_url: https://$DOMAIN_INGEST?grpc=4317"
 echo ""
 echo "  3. Reinicie os serviços:"
 echo "     cd $SCRIPT_DIR"
-echo "     docker-compose restart nginx uptrace"
+echo "     docker compose restart nginx uptrace"
 echo ""
 echo "  4. Teste os endpoints:"
 echo "     - UI:     https://$DOMAIN_UI"
