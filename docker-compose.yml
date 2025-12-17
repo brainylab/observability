@@ -13,9 +13,7 @@ services:
       retries: 30
     volumes:
       - ch_data:/var/lib/clickhouse
-    ports:
-      - "8123:8123"
-      - "9000:9000"
+
   postgres:
     image: postgres:17-alpine
     restart: on-failure
@@ -30,12 +28,17 @@ services:
       timeout: 1s
       retries: 30
     volumes:
-      - "pg_data3:/var/lib/postgresql/data/pgdata"
-    ports:
-      - "5432:5432"
+      - pg_data3:/var/lib/postgresql/data/pgdata
+
   redis:
     image: redis:6.2.2-alpine
     restart: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
   uptrace:
     image: "uptrace/uptrace:2.0.2"
     restart: on-failure
@@ -43,35 +46,39 @@ services:
       - ./uptrace.yml:/etc/uptrace/config.yml
       - ./certs/server.crt:/etc/uptrace/server.crt
       - ./certs/server.key:/etc/uptrace/server.key
-    #environment:
-    #  - DEBUG=2
-    ports:
-      - "4317"
+    expose:
       - "80"
+      - "4317"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:80/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     depends_on:
-      - clickhouse
-      - postgres
-      # Nginx como proxy reverso
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   nginx:
     image: nginx:alpine
     restart: on-failure
     ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS (se usar SSL)
-      - "4317:4317" # gRPC OTLP
+      - "80:80"
+      - "443:443"
+      - "4317:4317"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Se usar SSL:
       - ./certs:/etc/nginx/ssl:ro
     depends_on:
-      - uptrace
-    networks:
-      default:
+      uptrace:
+        condition: service_healthy # Aguarda o Uptrace estar saudável
+
 volumes:
   ch_data:
   pg_data3:
-  # prometheus_data:
-  # mailpit_data:
 
 networks:
   default:
