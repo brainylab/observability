@@ -1,6 +1,172 @@
-# ignore files
+# ============================================================================
+# Arquivos de Configuração Sensíveis
+# ============================================================================
+
+# Variáveis de ambiente
 .env
+.env.local
+.env.production
+.env.development
+
+# Configuração do Uptrace (contém secrets)
 uptrace.yml
 
-#ignore folders
-./nginx/ssl
+# ============================================================================
+# Certificados SSL/TLS
+# ============================================================================
+
+# Certificados privados (chaves)
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Certificados em nginx/ssl
+nginx/ssl/*.key
+nginx/ssl/*.crt
+nginx/ssl/*.pem
+
+# Certificados em certs/
+certs/*.key
+certs/*.crt
+certs/*.pem
+
+# Let's Encrypt (se commitado por engano)
+/etc/letsencrypt/
+
+# ============================================================================
+# Logs
+# ============================================================================
+
+# Logs de aplicação
+*.log
+logs/
+*.log.*
+
+# Logs de renovação SSL
+ssl-renew.log
+renew-ssl.log
+
+# Logs do Docker
+docker-compose.log
+
+# ============================================================================
+# Backups
+# ============================================================================
+
+# Backups de banco de dados
+backups/
+*.sql
+*.dump
+*.backup
+*.tar.gz
+*.zip
+
+# Backups de certificados
+ssl-backup-*.tar.gz
+cert-backup-*.tar.gz
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Volumes do Docker (se commitado localmente)
+ch_data/
+pg_data/
+pg_data3/
+prometheus_data/
+mailpit_data/
+
+# ============================================================================
+# Temporários e Cache
+# ============================================================================
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+__pycache__/
+*.pyc
+node_modules/
+
+# ============================================================================
+# IDEs e Editores
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+
+# ============================================================================
+# Sistema Operacional
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================================================================
+# Scripts de Teste
+# ============================================================================
+
+# Scripts de teste que não devem ser commitados
+test-*.sh
+debug-*.sh
+local-*.sh
+
+# ============================================================================
+# Dados Sensíveis
+# ============================================================================
+
+# Tokens e secrets
+secrets/
+*.secret
+token.txt
+
+# Dados de teste com informações sensíveis
+test-data/
+
+# ============================================================================
+# Exceções - Arquivos que DEVEM ser commitados
+# ============================================================================
+
+# Manter exemplos
+!example-uptrace.yml
+!.env.example
+
+# Manter scripts importantes
+!setup-ssl.sh
+!renew-ssl-manual.sh
+
+# Manter documentação
+!*.md
+!README.md

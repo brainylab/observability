@@ -2,12 +2,19 @@
 
 Stack completa de observabilidade com **Uptrace**, **ClickHouse**, **PostgreSQL** e **Redis** usando Docker Compose com proxy reverso Nginx e SSL/TLS.
 
+## 🚀 Quick Start
+
+**Para configuração rápida com SSL multi-domínio, consulte:**
+- **[QUICK-START.md](QUICK-START.md)** - Comandos rápidos em 5 passos
+- **[SSL-SETUP-GUIDE.md](SSL-SETUP-GUIDE.md)** - Guia completo de SSL
+
 ## 📋 Índice
 
 - [Pré-requisitos](#pré-requisitos)
 - [Arquitetura](#arquitetura)
 - [Instalação](#instalação)
 - [Configuração SSL/TLS](#configuração-ssltls)
+  - [SSL Multi-Domínio (UI + Ingest)](#ssl-multi-domínio-ui--ingest)
 - [Uso](#uso)
 - [Manutenção](#manutenção)
 - [Troubleshooting](#troubleshooting)
@@ -20,7 +27,9 @@ Antes de começar, certifique-se de ter instalado:
 
 - **Docker** (versão 20.10+)
 - **Docker Compose** (versão 2.0+)
-- **Domínio** apontando para o servidor (para SSL válido)
+- **Domínio(s)** apontando para o servidor (para SSL válido)
+  - 1 domínio: UI e Ingest no mesmo domínio
+  - 2 domínios: UI e Ingest separados (**recomendado**)
 - **Portas abertas**: 80, 443, 4317
 
 ```bash
@@ -166,10 +175,10 @@ server {
 
 ```bash
 # Tornar o script executável
-chmod +x setup-ssl.sh
+chmod +x create-ssl.sh
 
 # Executar como root
-sudo ./setup-ssl.sh
+sudo ./create-ssl.sh
 ```
 
 O script irá solicitar:
@@ -179,7 +188,7 @@ O script irá solicitar:
 
 **Primeira execução (TESTE):**
 ```bash
-sudo ./setup-ssl.sh
+sudo ./create-ssl.sh
 # Digite seu domínio: uptrace.exemplo.com
 # Digite seu email: seu@email.com
 # Usar certificado de TESTE? [s/N]: s
@@ -188,7 +197,7 @@ sudo ./setup-ssl.sh
 Se tudo funcionar, execute novamente em **modo PRODUÇÃO**:
 
 ```bash
-sudo ./setup-ssl.sh
+sudo ./create-ssl.sh
 # Digite seu domínio: uptrace.exemplo.com
 # Digite seu email: seu@email.com
 # Usar certificado de TESTE? [s/N]: n
@@ -241,9 +250,46 @@ https://seu-dominio.com
 
 ## 🔐 Configuração SSL/TLS
 
+### SSL Multi-Domínio (UI + Ingest)
+
+**Configuração recomendada:** Domínios separados para melhor isolamento e segurança.
+
+#### Exemplo de arquitetura:
+- **UI**: `uptrace.seu-dominio.com` (interface web)
+- **Ingest**: `ingest.seu-dominio.com` (OTLP endpoints)
+
+#### Vantagens:
+✅ Isolamento de tráfego  
+✅ Rate limiting específico  
+✅ Políticas de segurança diferentes  
+✅ Escalabilidade independente  
+
+#### Configuração rápida:
+
+```bash
+# 1. Configure DNS para ambos os domínios apontando para o servidor
+# 2. Edite nginx/nginx.conf com os domínios corretos
+# 3. Execute o script de SSL
+chmod +x setup-ssl.sh
+sudo ./setup-ssl.sh
+
+# O script irá:
+# - Gerar certificados para ambos os domínios
+# - Copiar para nginx/ssl/server.crt e nginx/ssl/ingest.crt
+# - Configurar renovação automática
+```
+
+**Para guia completo, consulte [SSL-SETUP-GUIDE.md](SSL-SETUP-GUIDE.md)**
+
 ### Certificados Let's Encrypt
 
-Os certificados são gerados automaticamente pelo script `create-ssl.sh`.
+Os certificados são gerados automaticamente pelo script `setup-ssl.sh`.
+
+**Arquivos gerados:**
+- `nginx/ssl/server.crt` - Certificado da UI
+- `nginx/ssl/server.key` - Chave privada da UI
+- `nginx/ssl/ingest.crt` - Certificado de Ingestão (se multi-domínio)
+- `nginx/ssl/ingest.key` - Chave privada de Ingestão (se multi-domínio)
 
 #### Renovação Automática
 
@@ -569,23 +615,30 @@ sudo journalctl -u certbot
 
 ```
 observability/
-├── README.md                    # Este arquivo
-├── docker compose.yml           # Orquestração dos containers
+├── README.md                    # Este arquivo (documentação completa)
+├── QUICK-START.md              # ⚡ Guia rápido em 5 passos
+├── SSL-SETUP-GUIDE.md          # 🔒 Guia detalhado de SSL multi-domínio
+├── docker-compose.yml           # Orquestração dos containers
 ├── uptrace.yml                  # Configuração do Uptrace
 ├── example-uptrace.yml          # Arquivo de exemplo
 ├── .env                         # Variáveis de ambiente (criar se necessário)
 ├── .gitignore                   # Arquivos ignorados pelo git
 │
 ├── nginx/                       # Configurações do Nginx
-│   ├── nginx.conf              # Configuração principal
+│   ├── nginx.conf              # Configuração principal (editar domínios)
+│   └── ssl/                    # Certificados SSL (auto-gerados)
+│       ├── server.crt          # Certificado UI
+│       ├── server.key          # Chave privada UI
+│       ├── ingest.crt          # Certificado Ingest (multi-domínio)
+│       └── ingest.key          # Chave privada Ingest (multi-domínio)
 │
 ├── certs/                       # Certificados do Uptrace (opcional)
 │   ├── server.crt
 │   └── server.key
 │
 ├── scripts/                     # Scripts de automação
-│   ├── setup-ssl.sh            # Configuração inicial SSL
-│   ├── renew-ssl.sh            # Renovação automática
+│   ├── setup-ssl.sh            # 🔐 Configuração SSL (UI + Ingest)
+│   ├── renew-ssl-multi.sh      # Renovação automática (criado pelo setup)
 │   └── renew-ssl-manual.sh     # Renovação manual
 │
 └── backups/                     # Backups (criar se necessário)
@@ -600,6 +653,7 @@ observability/
 ### Checklist de Segurança
 
 - [ ] Certificado SSL/TLS válido instalado
+- [ ] Domínios configurados corretamente (UI e Ingest)
 - [ ] Senha do admin alterada
 - [ ] Secret do `uptrace.yml` alterado para valor aleatório
 - [ ] Senhas dos bancos de dados alteradas (produção)
@@ -608,13 +662,21 @@ observability/
 - [ ] Renovação automática de certificados ativa
 - [ ] HTTPS forçado (redirect HTTP → HTTPS)
 - [ ] Headers de segurança configurados no Nginx
+- [ ] Rate limiting configurado para ingestão
+- [ ] Logs separados para UI e Ingest
 
 ## 📚 Recursos
 
+### Documentação deste projeto:
+- **[QUICK-START.md](QUICK-START.md)** - Guia rápido de configuração
+- **[SSL-SETUP-GUIDE.md](SSL-SETUP-GUIDE.md)** - Configuração SSL detalhada
+
+### Documentação externa:
 - [Documentação Oficial do Uptrace](https://uptrace.dev/get/get-started.html)
 - [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 - [Let's Encrypt](https://letsencrypt.org/)
 - [Nginx Documentation](https://nginx.org/en/docs/)
+- [SSL Labs Test](https://www.ssllabs.com/ssltest/)
 
 ---
 
